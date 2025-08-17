@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import postgres from "postgres";
 
 export async function POST(request: NextRequest) {
 
@@ -10,6 +11,8 @@ export async function POST(request: NextRequest) {
     isValidDescription(description);
     isValidAuthor(author);
 
+    savePostData({ title, description, author });
+
     return NextResponse.json(
       { message: "Data is valid" }
     );
@@ -20,6 +23,18 @@ export async function POST(request: NextRequest) {
       { error: "Error validating data" },
       { status: 400 }
     );
+  }
+}
+
+async function savePostData(data: { title: string; description: string; author: string }): Promise<void> {
+
+  try {
+    const connectionString = "postgresql://postgres.edxdrjgaiwftvtpcyeii:fWHLH7Pj7QPpDDzn@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+    const sql = postgres(connectionString);
+
+    await sql`INSERT INTO public.posts (title, description, author) VALUES (${data.title}, ${data.description}, ${data.author})`;
+  } catch (error) {
+    throw new Error("Failed to save post");
   }
 }
 
